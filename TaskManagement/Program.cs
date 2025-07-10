@@ -1,4 +1,10 @@
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
+using System.IdentityModel.Tokens.Jwt;
 using TaskManagement.Context;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +15,20 @@ builder.Services.AddDbContext<TaskManagementContext>(options =>
 });
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration);
+
+builder.Services.AddControllersWithViews(options =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
+}).AddMicrosoftIdentityUI();
 
 var app = builder.Build();
 
@@ -24,6 +44,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthorization();
+app.UseAuthentication();
 
 app.MapStaticAssets();
 
@@ -34,3 +55,4 @@ app.MapControllerRoute(
 
 
 app.Run();
+
