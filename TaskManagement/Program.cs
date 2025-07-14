@@ -9,18 +9,20 @@ using TaskManagement.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<TaskManagementContext>(options =>
-{
-    options.UseInMemoryDatabase("TaskManagements");
-});
+
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+//builder.Services.AddControllersWithViews();
 
 
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration);
+
+builder.Services.AddDbContext<TaskManagementContext>(options =>
+{
+    options.UseInMemoryDatabase("TaskManagements");
+});
 
 builder.Services.AddControllersWithViews(options =>
 {
@@ -29,6 +31,10 @@ builder.Services.AddControllersWithViews(options =>
         .Build();
     options.Filters.Add(new AuthorizeFilter(policy));
 }).AddMicrosoftIdentityUI();
+
+builder.Services.AddRazorPages();
+
+//builder.Services.AddControllersWithViews().AddMicrosoftIdentityUI();
 
 var app = builder.Build();
 
