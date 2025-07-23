@@ -1,71 +1,56 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using TaskManagement.Context;
 using TaskManagement.Models;
 
 namespace TaskManagement.Controllers
 {
     public class TaskManagementController : Controller
     {
-        private readonly TaskManagementContext _context;
-        public TaskManagementController(TaskManagementContext taskManagementContext)
+        private readonly string _apiUrl = "https://localhost:7252/api/";
+        private readonly HttpClient _httpClient;
+        public TaskManagementController(HttpClient httpClient)
         {
-            _context = taskManagementContext;
+            _httpClient = httpClient;
         }
-        public async Task<IActionResult> Index()
-        {
-            return View(await _context.TaskManagements.ToListAsync());
-        }
+        public async Task<IActionResult> Index() => View(await _httpClient.
+            GetFromJsonAsync<List<TaskManagementModel>>(_apiUrl + "todolist"));
+
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TaskManagementModel model)
         {
-
-            if (ModelState.IsValid) { 
-                await _context.TaskManagements.AddAsync(model);
-                await _context.SaveChangesAsync();
-            }  
-            return View(model);
+            await _httpClient.PostAsJsonAsync(_apiUrl + "todolist", model);
+            return RedirectToAction("Index");
         }
         [HttpGet]
-        public async Task<IActionResult> Edit(int id) => View(await _context.TaskManagements.FirstOrDefaultAsync(t => t.Id == id));
-        
+        public async Task<IActionResult> Edit(int id)
+        {
+            var task = await _httpClient.GetFromJsonAsync<TaskManagementModel>(_apiUrl + "todolist/" + id);
+            return View(task);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(TaskManagementModel task)
         {
-            var dbtask = await _context.TaskManagements.FirstOrDefaultAsync(t => t.Id == task.Id);
-
-            dbtask.Title = task.Title;
-            dbtask.Description = task.Title;
-            dbtask.StartDate = task.StartDate;
-            dbtask.EndDate = task.EndDate;
-
-            await _context.SaveChangesAsync();
-            return View();
+            await _httpClient.PutAsJsonAsync<TaskManagementModel>(_apiUrl + "todolist/" + task.Id, task);
+            return RedirectToAction("Index");
         }
         public IActionResult Detail()
         {
             return View();
         }
         [HttpGet]
-        public async Task<IActionResult> Remove(int id)
-        {
-            var dbtask = await _context.TaskManagements.FirstOrDefaultAsync(t => t.Id == id);
-            return View(dbtask);
-        }
+        public async Task<IActionResult> Remove(int id) => View(await _httpClient.GetFromJsonAsync<TaskManagementModel>(_apiUrl + "todolist/" + id));
+
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var dbtask = await _context.TaskManagements.FirstOrDefaultAsync(t => t.Id == id);
-            _context.TaskManagements.Remove(dbtask);
-            await _context.SaveChangesAsync();
+            await _httpClient.DeleteAsync(_apiUrl + "todolist/" + id);
             return RedirectToAction("Index");
         }
     }

@@ -6,7 +6,6 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using TaskManagement.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,10 +30,6 @@ builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.Authentic
 
         await ExtenClaimsAsync(context);
     };
-});
-builder.Services.AddDbContext<TaskManagementContext>(options =>
-{
-    options.UseInMemoryDatabase("TaskManagements");
 });
 
 
